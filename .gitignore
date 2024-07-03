@@ -1,3 +1,4 @@
 catboost_info/
 .DS_Store
 my-creds.json
+.env
