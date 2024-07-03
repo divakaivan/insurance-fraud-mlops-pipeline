@@ -2,3 +2,6 @@ catboost_info/
 .DS_Store
 my-creds.json
 .env
+.metaflow
+ready_df.csv
+__pycache__/
