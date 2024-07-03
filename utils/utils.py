@@ -3,6 +3,7 @@ import json
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import confusion_matrix, classification_report, roc_curve, roc_auc_score, ConfusionMatrixDisplay, recall_score
+import os
 
 def save_feature_importance(model, model_name, X_test):
     if model_name == 'LogisticRegression':
@@ -81,3 +82,15 @@ def log_model_performance(model, X_test, y_test, model_name, model_description, 
         
         if best_params is not None:
             mlflow.log_params(best_params)
+
+def get_best_params():
+    tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment('Insurance Fraud Detection')
+    run_id = os.getenv('FRAUD_MODELLING_MLFLOW_RUN_ID')
+    client = mlflow.tracking.MlflowClient()
+    run = client.get_run(run_id)
+    params = run.data.params
+    if params and next(iter(params)) == 'model_description':
+        del params['model_description']
+    return params
