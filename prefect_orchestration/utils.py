@@ -1,12 +1,11 @@
 import mlflow
 import os
 
-def get_best_params():
+def get_best_params(run_id: str = os.getenv('FRAUD_MODELLING_MLFLOW_RUN_ID')):
     """Get best parameters from the MLflow run"""
     tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment('Insurance Fraud Detection')
-    run_id = os.getenv('FRAUD_MODELLING_MLFLOW_RUN_ID')
     client = mlflow.tracking.MlflowClient()
     run = client.get_run(run_id)
     params = run.data.params
@@ -23,3 +22,15 @@ def convert_values_to_int_if_possible(dictionary):
         except ValueError:
             converted_dict[key] = value
     return converted_dict
+
+def format_confusion_matrix(cm):
+    labels = ['Actual Not Fraud', 'Actual Fraud']
+    columns = ['Predicted Not Fraud', 'Predicted Fraud']
+
+    md_table = "|  | " + " | ".join(columns) + " |\n"
+    md_table += "|--------------------|-" + "-|".join(['---']*len(columns)) + "|\n"
+
+    for i in range(len(labels)):
+        md_table += f"| **{labels[i]}** | " + " | ".join([f"{cm[i][j]}" for j in range(len(columns))]) + " |\n"
+
+    return md_table
