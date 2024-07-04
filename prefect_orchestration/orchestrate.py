@@ -1,14 +1,14 @@
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report, confusion_matrix, recall_score
 from sklearn.model_selection import train_test_split
-from prefect import flow, task
-import pandas as pd
 from imblearn.ensemble import BalancedRandomForestClassifier
-from utils import get_best_params, convert_values_to_int_if_possible, format_confusion_matrix
-from prefect.artifacts import create_markdown_artifact
+import pandas as pd
 import mlflow
 
-import mlflow
-import mlflow.sklearn
+from prefect import flow, task
+from prefect.artifacts import create_markdown_artifact
+
+from utils import get_best_params, convert_values_to_int_if_possible, format_confusion_matrix
+
 import os
 from dotenv import load_dotenv
 
