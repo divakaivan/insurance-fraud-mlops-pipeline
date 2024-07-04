@@ -3,8 +3,8 @@ from sklearn.model_selection import train_test_split
 from prefect import flow, task
 import pandas as pd
 from imblearn.ensemble import BalancedRandomForestClassifier
-from utils import get_best_params, convert_values_to_int_if_possible
-from prefect.artifacts import create_markdown_artifact, create_table_artifact
+from utils import get_best_params, convert_values_to_int_if_possible, format_confusion_matrix
+from prefect.artifacts import create_markdown_artifact
 import mlflow
 
 import mlflow
@@ -13,18 +13,6 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
-def format_confusion_matrix(cm):
-    labels = ['Actual Not Fraud', 'Actual Fraud']
-    columns = ['Predicted Not Fraud', 'Predicted Fraud']
-
-    md_table = "|  | " + " | ".join(columns) + " |\n"
-    md_table += "|--------------------|-" + "-|".join(['---']*len(columns)) + "|\n"
-
-    for i in range(len(labels)):
-        md_table += f"| **{labels[i]}** | " + " | ".join([f"{cm[i][j]}" for j in range(len(columns))]) + " |\n"
-
-    return md_table
 
 @task
 def read_data(filename: str) -> pd.DataFrame:
@@ -48,13 +36,14 @@ def best_params_from_mlflow():
 @task
 def train_model(X_train: pd.DataFrame, y_train: pd.Series, X_test, y_test) -> None:
     
-    with mlflow.start_run():
+    with mlflow.start_run() as run:
 
         best_params = best_params_from_mlflow()
         mlflow.log_params(best_params)
         model = BalancedRandomForestClassifier(**best_params)
         model.fit(X_train, y_train)
-        mlflow.sklearn.log_model(model, 'balanced_rf_model')
+        model_name = 'balanced_rf_model'
+        mlflow.sklearn.log_model(model, model_name)
 
         y_pred = model.predict(X_test)
         
@@ -81,19 +70,59 @@ def train_model(X_train: pd.DataFrame, y_train: pd.Series, X_test, y_test) -> No
             markdown=md_classification_report+md_confussion_matrix
         )
 
+        mlflow_model_info = f"""
+## MLflow Run Information
+
+```
+- Model Name: {model_name}
+- Artifact URI: {run.info.artifact_uri}
+- Run ID: {run.info.run_id}
+- Experiment ID: {run.info.experiment_id}
+- GCS location: {run.info.artifact_uri}/{model_name}/model.pkl
+```
+"""
+        create_markdown_artifact(
+            key="mlflowinfo",
+            markdown=mlflow_model_info
+        )
+        
+        deploy_model_instructions = f"""
+## Deploy Model Instructions
+
+- MLflow settings
+```python
+import mlflow
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../my-creds.json'
+tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
+mlflow.set_tracking_uri(tracking_uri)
+mlflow.set_experiment('Insurance Fraud Detection')
+```
+- Load the model
+```python
+logged_model = 'runs:/{run.info.run_id}/{model_name}'
+model = mlflow.pyfunc.load_model(logged_model)
+model.predict(_)
+```
+"""
+        
+        create_markdown_artifact(
+            key="deployinstructions",
+            markdown=deploy_model_instructions
+        )
+
     return None
 
 @flow(log_prints=True)
-def main():
+def insurance_fraud_model_pipe():
 
     # MLflow settings
-    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../my-creds.json'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../my-creds.json'
     tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment('Insurance Fraud Detection')
 
     # Load
-    data = read_data("./ready_df.csv")
+    data = read_data("../ready_df.csv")
     
     # Split
     X_train, X_test, y_train, y_test = split_data(data)
@@ -102,4 +131,7 @@ def main():
     train_model(X_train, y_train, X_test, y_test)
     
 if __name__ == "__main__":
-    main()
+    insurance_fraud_model_pipe.serve(
+        name='Train Insurance Fraud Model',
+        tags=['balanced_random_forest', 'train', 'mlflow']
+    )
