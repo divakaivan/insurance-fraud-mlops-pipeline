@@ -4,4 +4,82 @@ my-creds.json
 .env
 .metaflow
 ready_df.csv
+
+# Python artifacts
 __pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+build/
+dist/
+sdist/
+
+# Test artifacts
+.benchmarks/
+.coverage
+.coverage.*.*
+.prefect-results
+.pytest_cache/
+
+# Type checking artifacts
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# IPython
+profile_default/
+ipython_config.py
+*.ipynb_checkpoints/*
+
+# Profiling
+/prof
+
+# Environments
+.python-version
+.env
+.venv
+env/
+venv/
+
+# Documentation artifacts
+# gschema.json
+site/
+.cache/
+src/mkdocs-material
+
+# UI artifacts
+src/prefect/server/ui/*
+src/prefect/server/ui_build/*
+**/node_modules
+
+# Databases
+*.db
+
+# API artifacts
+
+
+# MacOS
+.DS_Store
+
+# Dask
+dask-worker-space/
+
+# Editors
+.idea/
+.vscode/
+!ui/.vscode/
+
+# Prefect files
+prefect.yaml
+
+# Deployment recipes
+!src/prefect/deployments/recipes/*/**
+
+# For development doc server if link
+libcairo.2.dylib
+
+# setuptools-scm generated files
+src/integrations/*/**/_version.py
+*.log
