@@ -19,4 +19,4 @@ def upload_to_gcs():
     return None
 
 if __name__ == "__main__":
-    upload_to_gcs()
+    upload_to_gcs.serve(name="upload_to_gcs")

@@ -116,13 +116,12 @@ model.predict(_)
 def insurance_fraud_model_pipe():
 
     # MLflow settings
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../my-creds.json'
     tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment('Insurance Fraud Detection')
 
     # Load
-    data = read_data("../ready_df.csv")
+    data = read_data("ready_df.csv")
     
     # Split
     X_train, X_test, y_train, y_test = split_data(data)
