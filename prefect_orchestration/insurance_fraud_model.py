@@ -100,8 +100,9 @@ def train_model(X_train: pd.DataFrame, y_train: pd.Series, X_test, y_test) -> No
 
 - MLflow settings
 ```python
+import os
 import mlflow
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../my-creds.json'
+
 tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
 mlflow.set_tracking_uri(tracking_uri)
 mlflow.set_experiment('Insurance Fraud Detection')
@@ -110,7 +111,6 @@ mlflow.set_experiment('Insurance Fraud Detection')
 ```python
 logged_model = 'runs:/{run.info.run_id}/{model_name}'
 model = mlflow.pyfunc.load_model(logged_model)
-model.predict(_)
 ```
 """
         
@@ -122,7 +122,7 @@ model.predict(_)
     return None
 
 @flow(log_prints=True)
-def insurance_fraud_model_pipe():
+def insurance_fraud_model():
 
     # MLflow settings
     tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
@@ -139,7 +139,7 @@ def insurance_fraud_model_pipe():
     train_model(X_train, y_train, X_test, y_test)
     
 if __name__ == "__main__":
-    insurance_fraud_model_pipe.serve(
+    insurance_fraud_model.serve(
         name='Train Insurance Fraud Model',
         tags=['balanced_random_forest', 'train', 'mlflow']
     )
