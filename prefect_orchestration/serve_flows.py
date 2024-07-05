@@ -1,5 +1,5 @@
 from prefect import serve
-from prepare_data import upload_to_gcs
+from upload_to_gcs import upload_to_gcs
 from insurance_fraud_model import insurance_fraud_model
 
 if __name__ == "__main__":
