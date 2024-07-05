@@ -1,7 +1,0 @@
-mlflow
-scikit-learn
-pandas
-numpy
-prefect-gcp --pre
-prefect --pre
-psycopg2-binary
