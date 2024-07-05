@@ -1,6 +1,6 @@
 from prefect import serve
 from prepare_data import upload_to_gcs
-from orchestrate import insurance_fraud_model_pipe
+from insurance_fraud_model_pipe import insurance_fraud_model_pipe
 
 if __name__ == "__main__":
     upload_to_gcs_flow_deploy = upload_to_gcs.to_deployment(
