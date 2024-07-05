@@ -4,6 +4,9 @@ my-creds.json
 .env
 .metaflow
 ready_df.csv
+meaningful_df.csv
+monitoring/model/*
+monitoring/lime/*
 
 # Python artifacts
 __pycache__/
