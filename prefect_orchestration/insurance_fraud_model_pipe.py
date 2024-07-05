@@ -5,6 +5,7 @@ import pandas as pd
 import mlflow
 
 from prefect import flow, task
+from prefect_gcp import GcpCredentials, GcsBucket
 from prefect.artifacts import create_markdown_artifact
 
 from utils import get_best_params, convert_values_to_int_if_possible, format_confusion_matrix
@@ -15,8 +16,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 @task
-def read_data(filename: str) -> pd.DataFrame:
-    return pd.read_csv(filename)
+def read_data():
+    gcp_credentials = GcpCredentials.load('my-gcp-creds-block')
+    gcs_bucket = GcsBucket(
+        bucket="fraud_modelling_prefect",
+        gcp_credentials=gcp_credentials
+    )
+    downloaded_file_path = gcs_bucket.download_object_to_path(
+        "ready_df.csv", "ready_df.csv"
+    )
+    return pd.read_csv(downloaded_file_path)
 
 @task
 def split_data(data: pd.DataFrame, test_size: float = 0.2) -> tuple:
@@ -121,7 +130,7 @@ def insurance_fraud_model_pipe():
     mlflow.set_experiment('Insurance Fraud Detection')
 
     # Load
-    data = read_data("ready_df.csv")
+    data = read_data()
     
     # Split
     X_train, X_test, y_train, y_test = split_data(data)
