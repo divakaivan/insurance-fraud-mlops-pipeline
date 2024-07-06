@@ -1,0 +1,69 @@
+volumes: 
+  grafana_data: {}
+
+networks:
+  front-tier:
+  back-tier:
+
+services:
+  db:
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    networks:
+      - back-tier
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8080:80"
+    networks:
+      - back-tier
+      - front-tier  
+
+  grafana:
+    image: grafana/grafana
+    user: "472"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/dashboards:/opt/grafana/dashboards
+    networks:
+      - back-tier
+      - front-tier
+    restart: always
+
+  data:
+    depends_on:
+      - db
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile-data
+    networks:
+      - back-tier
+    command: bash -c "python upload_to_postgres.py && touch /tmp/initialized"
+    entrypoint: |
+      /bin/sh -c 'if [ ! -f /tmp/initialized ]; then
+        touch /tmp/initialized;
+        python upload_to_postgres.py;
+      fi'
+
+  fastapi_app:
+    env_file:
+      - ./fastapi_deploy/.env
+    build:
+      context: .
+      dockerfile: Dockerfile-fastapi
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./fastapi_deploy:/code/fastapi_deploy
+    command: uvicorn fastapi_deploy.server:app --host 0.0.0.0 --port 8000
