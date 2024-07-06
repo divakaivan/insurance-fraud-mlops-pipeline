@@ -17,6 +17,7 @@ load_dotenv()
 
 @task
 def read_data():
+    # TODO: read from postgres
     gcp_credentials = GcpCredentials.load('my-gcp-creds-block')
     gcs_bucket = GcsBucket(
         bucket="fraud_modelling_prefect",
