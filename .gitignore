@@ -1,12 +1,13 @@
 catboost_info/
 .DS_Store
 my-creds.json
-.env
+*.env
 .metaflow
 ready_df.csv
 meaningful_df.csv
-monitoring/model/*
+monitoring/model/balanced_rf_model
 monitoring/lime/*
+feature_n_model_exploration/raw_kaggle_data
 
 # Python artifacts
 __pycache__/
