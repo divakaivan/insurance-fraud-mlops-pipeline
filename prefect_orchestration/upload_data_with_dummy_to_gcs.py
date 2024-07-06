@@ -4,7 +4,7 @@ from prefect_gcp import GcpCredentials, GcsBucket
 import pandas as pd
 
 @flow
-def upload_to_gcs():
+def upload_data_with_dummy_to_gcs():
     name = 'ready_df.csv'
     file_path = Path(name)
     df = pd.read_csv(file_path)
@@ -19,4 +19,4 @@ def upload_to_gcs():
     return None
 
 if __name__ == "__main__":
-    upload_to_gcs.serve(name="upload_to_gcs")
+    upload_data_with_dummy_to_gcs.serve(name="upload_to_gcs")
