@@ -8,7 +8,9 @@ from prefect_gcp import GcpCredentials, GcsBucket
 
 
 @task
-def kaggle_to_local():
+def kaggle_to_local() -> str:
+    """Downloads dataset from Kaggle and saves it to local"""
+
     dataset = "shivamb/vehicle-claim-fraud-detection"
     download_path = 'feature_n_model_exploration/raw_kaggle_data'
     if not os.path.exists(download_path):
@@ -25,7 +27,7 @@ def kaggle_to_local():
     return os.path.abspath(download_path)
 
 @task
-def local_to_gcs(file_path):
+def local_to_gcs(file_path: str) -> None:
     df = pd.read_csv(file_path + '/fraud_oracle.csv')
     gcp_credentials = GcpCredentials.load("my-gcp-creds-block", validate=False)
     gcs_bucket = GcsBucket(

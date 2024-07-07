@@ -6,14 +6,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from prefect import task, flow
-from prefect.logging import get_run_logger
 from prefect.flow_runs import pause_flow_run
 
 from sqlalchemy import create_engine
 from sklearn.model_selection import train_test_split
 
 @task
-def load_data_from_db():
+def load_data_from_db() -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load dataset with meaningful features, and same dataset but turned into dummies (dataset consists of only categorical features)"""
     
     db_params = {
@@ -31,7 +30,7 @@ def load_data_from_db():
     return model_data_w_dummy, meaningful_features_data
 
 @task()
-def load_model_from_mlflow(model_mlflow_runid = None):
+def load_model_from_mlflow(model_mlflow_runid: str = None) -> object:
     """
         Load a model to be used
         If a run id is not provided, the env run id will be used
@@ -51,7 +50,7 @@ def load_model_from_mlflow(model_mlflow_runid = None):
     return model
 
 @task
-def prep_data_for_shap_graphs(model_data_w_dummy):
+def prep_data_for_shap_graphs(model_data_w_dummy: pd.DataFrame) -> pd.DataFrame:
     """Prepare data for the next task in the flow"""
     
     X = model_data_w_dummy.drop('FraudFound_P', axis=1)
@@ -59,7 +58,7 @@ def prep_data_for_shap_graphs(model_data_w_dummy):
     return X
 
 @task
-def make_shap_graphs(model, X):
+def make_shap_graphs(model: object, X: pd.DataFrame) -> None:
     """Make SHAP graphs based on loaded model and data used for model training"""
     
     explainer = shap.Explainer(model)
@@ -101,8 +100,10 @@ def make_shap_graphs(model, X):
     plt.savefig('monitoring/shap_lime_info/beeswarm.png')
     plt.close()
 
+    return None
+
 @task
-def prepare_data_for_evidently(model_data_w_dummy, meaningful_features_data):
+def prepare_data_for_evidently(model_data_w_dummy: pd.DataFrame, meaningful_features_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """I only have 1 set of data, so I split it to create reference/current data"""
     reference_data, current_data = train_test_split(model_data_w_dummy, test_size=0.2, random_state=42)
 
@@ -123,7 +124,7 @@ def prepare_data_for_evidently(model_data_w_dummy, meaningful_features_data):
     return meaningful_reference_data, meaningful_current_data
 
 @task
-def make_evidently_html_dashboards(meaningful_reference_data, meaningful_current_data):
+def make_evidently_html_dashboards(meaningful_reference_data: pd.DataFrame, meaningful_current_data: pd.DataFrame) -> None:
     """Create HTML evidently dashboards"""
 
     # Data tests dashboard
@@ -160,6 +161,8 @@ def make_evidently_html_dashboards(meaningful_reference_data, meaningful_current
     report.run(reference_data=meaningful_reference_data, current_data=meaningful_current_data)
 
     report.save_html('monitoring/evidently_reports/evidently_dashboard.html')
+
+    return None
 
 @flow(log_prints=True)
 def make_monitoring_ui_artifacts():

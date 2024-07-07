@@ -1,7 +1,7 @@
 import mlflow
 import os
 
-def get_best_params(run_id: str = os.getenv('FRAUD_MODELLING_MLFLOW_RUN_ID')):
+def get_best_params(run_id: str = os.getenv('FRAUD_MODELLING_MLFLOW_RUN_ID')) -> dict:
     """Get best parameters from the MLflow run"""
     tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
     mlflow.set_tracking_uri(tracking_uri)
@@ -13,7 +13,7 @@ def get_best_params(run_id: str = os.getenv('FRAUD_MODELLING_MLFLOW_RUN_ID')):
         del params['model_description']
     return params
 
-def convert_values_to_int_if_possible(dictionary):
+def convert_values_to_int_if_possible(dictionary: dict) -> dict:
     """Convert values in a dictionary to integers if possible"""
     converted_dict = {}
     for key, value in dictionary.items():
@@ -23,7 +23,7 @@ def convert_values_to_int_if_possible(dictionary):
             converted_dict[key] = value
     return converted_dict
 
-def format_confusion_matrix(cm):
+def format_confusion_matrix(cm: list[list[int]]) -> str:
     labels = ['Actual Not Fraud', 'Actual Fraud']
     columns = ['Predicted Not Fraud', 'Predicted Fraud']
 
