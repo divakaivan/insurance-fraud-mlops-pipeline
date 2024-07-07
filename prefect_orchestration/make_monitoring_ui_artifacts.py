@@ -1,19 +1,21 @@
+import os
 import shap
+import pickle
 import numpy as np
 import pandas as pd
-import pickle
 import matplotlib.pyplot as plt
-import os
-from sqlalchemy import create_engine
+
 from prefect import task, flow
+from prefect.logging import get_run_logger
+from prefect.flow_runs import pause_flow_run
 
+from sqlalchemy import create_engine
 from sklearn.model_selection import train_test_split
-
-from evidently.report import Report
-from evidently.metric_preset import DataQualityPreset, DataDriftPreset, ClassificationPreset, TargetDriftPreset
 
 @task
 def load_data_from_db():
+    """Load dataset with meaningful features, and same dataset but turned into dummies (dataset consists of only categorical features)"""
+    
     db_params = {
         'host': os.getenv('db_host'),
         'port': os.getenv('db_port'), 
@@ -28,18 +30,38 @@ def load_data_from_db():
 
     return model_data_w_dummy, meaningful_features_data
 
+@task()
+def load_model_from_mlflow(model_mlflow_runid = None):
+    """
+        Load a model to be used
+        If a run id is not provided, the env run id will be used
+    """
+    import mlflow
+    tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment('Insurance Fraud Detection')
+    if model_mlflow_runid is not None:
+        run_id = model_mlflow_runid
+    else:
+        run_id = os.getenv('FRAUD_MODELLING_MLFLOW_RUN_ID')
+    logged_model = f'runs:/{run_id}/balanced_rf_model'
+
+    model = mlflow.pyfunc.load_model(logged_model)
+    
+    return model
+
 @task
 def prep_data_for_shap_graphs(model_data_w_dummy):
+    """Prepare data for the next task in the flow"""
     
     X = model_data_w_dummy.drop('FraudFound_P', axis=1)
 
-    with open('monitoring/model/balanced_rf_model/model.pkl', 'rb') as f:
-        model = pickle.load(f)
-
-    return model, X
+    return X
 
 @task
 def make_shap_graphs(model, X):
+    """Make SHAP graphs based on loaded model and data used for model training"""
+    
     explainer = shap.Explainer(model)
     shap_values = explainer(X)
 
@@ -81,6 +103,7 @@ def make_shap_graphs(model, X):
 
 @task
 def prepare_data_for_evidently(model_data_w_dummy, meaningful_features_data):
+    """I only have 1 set of data, so I split it to create reference/current data"""
     reference_data, current_data = train_test_split(model_data_w_dummy, test_size=0.2, random_state=42)
 
     with open('monitoring/model/balanced_rf_model/model.pkl', 'rb') as f:
@@ -101,6 +124,8 @@ def prepare_data_for_evidently(model_data_w_dummy, meaningful_features_data):
 
 @task
 def make_evidently_html_dashboards(meaningful_reference_data, meaningful_current_data):
+    """Create HTML evidently dashboards"""
+
     # Data tests dashboard
     from evidently.test_suite import TestSuite
     from evidently.test_preset import NoTargetPerformanceTestPreset
@@ -122,6 +147,9 @@ def make_evidently_html_dashboards(meaningful_reference_data, meaningful_current
     data_stability.save_html('monitoring/evidently_reports/data_stability.html')
 
     # Model prediction data dashboard
+    from evidently.report import Report
+    from evidently.metric_preset import DataQualityPreset, DataDriftPreset, ClassificationPreset, TargetDriftPreset
+
     report = Report(metrics=[
         DataQualityPreset(),
         DataDriftPreset(),
@@ -135,8 +163,17 @@ def make_evidently_html_dashboards(meaningful_reference_data, meaningful_current
 
 @flow(log_prints=True)
 def make_monitoring_ui_artifacts():
+    """
+        Update monitoring UI artifacts used by streamlit
+        Default (from env) model run id is used, the user can input a new mlflow run id to use a new model
+    """
+
+    model_mlflow_runid = pause_flow_run(wait_for_input=str)
+
+    model = load_model_from_mlflow(model_mlflow_runid)
+
     model_data_w_dummy, meaningful_features_data = load_data_from_db()
-    model, X = prep_data_for_shap_graphs(model_data_w_dummy)
+    X = prep_data_for_shap_graphs(model_data_w_dummy)
     make_shap_graphs(model, X)
 
     meaningful_reference_data, meaningful_current_data = prepare_data_for_evidently(model_data_w_dummy, meaningful_features_data)
