@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 def full_dashaboard():
-    st.title('Model and Data dashboard')
+    st.title('Car Insurance Fraud Model and Data dashboard')
     path_to_html = "monitoring/evidently_reports/evidently_dashboard.html" 
 
     with open(path_to_html,'r', encoding='utf-8') as f: 
