@@ -17,7 +17,9 @@ load_dotenv()
 
 
 @task
-def read_data():
+def read_data() -> pd.DataFrame:
+    """Reads the data from the database"""
+
     db_params = {
     'host': os.getenv('db_host'),
     'port': os.getenv('db_port'), 
@@ -34,6 +36,7 @@ def read_data():
 
 @task
 def split_data(data: pd.DataFrame, test_size: float = 0.2) -> tuple:
+    """Split dataset into training and testing sets"""
         
     dummies_X = data.drop(columns=['FraudFound_P'])
     y = data['FraudFound_P']
@@ -42,14 +45,17 @@ def split_data(data: pd.DataFrame, test_size: float = 0.2) -> tuple:
     return X_train, X_test, y_train, y_test
 
 @task
-def best_params_from_mlflow():
+def best_params_from_mlflow() -> dict:
+    """Get the best parameters from MLflow"""
+
     best_params = get_best_params()
     best_params = convert_values_to_int_if_possible(best_params)
     return best_params
 
 @task
 def train_model(X_train: pd.DataFrame, y_train: pd.Series, X_test, y_test) -> None:
-    
+    """Train the model and log the metrics and model to MLflow"""
+
     with mlflow.start_run() as run:
 
         best_params = best_params_from_mlflow()
@@ -127,7 +133,7 @@ model = mlflow.pyfunc.load_model(logged_model)
     return None
 
 @flow(log_prints=True)
-def insurance_fraud_model():
+def insurance_fraud_model() -> None:
 
     # MLflow settings
     tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
