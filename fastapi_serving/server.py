@@ -1,4 +1,5 @@
 import pickle
+import pandas as pd
 from fastapi import FastAPI
 
 # loading from local so I do not need to keep the mlflow server from GCP running
@@ -12,6 +13,8 @@ def read_root():
     return {"message": "Welcome to the Insurance Fraud Detection API"}
 
 @app.post("/predict")
-def predict_fraud(data: dict):
-    # prediction = model.predict(data)
-    return {"prediction": True}
+def predict_fraud(data: pd.DataFrame):
+    y_pred = model.predict(data)
+    data_with_predictions = data.copy()
+    data_with_predictions['FraudFound_P'] = y_pred
+    return {"prediction": data_with_predictions}
