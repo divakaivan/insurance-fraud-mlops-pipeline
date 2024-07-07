@@ -6,8 +6,21 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import pickle
 import matplotlib.pyplot as plt
+import os
+from sqlalchemy import create_engine
 
-data = pd.read_csv('ready_df.csv')
+# READ DATA & MODEL
+db_params = {
+    'host': os.getenv('db_host'),
+    'port': os.getenv('db_port'), 
+    'database': os.getenv('db_name'),
+    'user': os.getenv('db_username'),
+    'password': os.getenv('db_password')
+}
+engine = create_engine(f'postgresql+psycopg2://{db_params["user"]}:{db_params["password"]}@{db_params["host"]}:{db_params["port"]}/{db_params["database"]}')
+query = "SELECT * FROM model_data_w_dummy"
+data = pd.read_sql_query(query, engine)
+
 X = data.drop('FraudFound_P', axis=1)
 y = data['FraudFound_P']
 
