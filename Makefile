@@ -12,6 +12,8 @@ help:  ## Show this help message
 	@echo "Options:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo ""
+	@echo "NOTE! If you update the monitoring UI artifacts, you have to push them to GitHub to update the hosted UI"
+	@echo ""
 	@echo "prefect-serve-cloud and start-all are not run in detached mode"
 	@echo ""
 
@@ -26,4 +28,8 @@ build-all:  ## Build image with PostgreSQL, pgAdmin, Grafana, Data upload to db,
 .PHONY: start-all
 start-all:  ## Start services
 	docker-compose -f $(DOCKER_COMPOSE_FILE) up
+
+.PHONY: update-monitoring-artifacts
+update-monitoring-artifacts:  ## Update monitoring artifacts 
+	python prefect_orchestration/make_monitoring_ui_artifacts.py
 

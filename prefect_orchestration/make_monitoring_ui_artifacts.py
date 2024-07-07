@@ -143,7 +143,4 @@ def make_monitoring_ui_artifacts():
     make_evidently_html_dashboards(meaningful_reference_data, meaningful_current_data)
 
 if __name__ == "__main__":
-    make_monitoring_ui_artifacts.serve(
-        name='Create Monitoring UI Artifacts',
-        tags=['monitoring', 'model', 'data', 'quality']
-    )
+    make_monitoring_ui_artifacts()
