@@ -39,23 +39,6 @@ services:
       - front-tier
     restart: always
 
-  data:
-    depends_on:
-      - db
-    env_file:
-      - .env
-    build:
-      context: .
-      dockerfile: Dockerfile-data
-    networks:
-      - back-tier
-    command: bash -c "python upload_to_postgres.py && touch /tmp/initialized"
-    entrypoint: |
-      /bin/sh -c 'if [ ! -f /tmp/initialized ]; then
-        touch /tmp/initialized;
-        python upload_to_postgres.py;
-      fi'
-
   fastapi_app:
     env_file:
       - ./fastapi_deploy/.env
