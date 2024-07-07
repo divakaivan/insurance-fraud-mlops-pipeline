@@ -2,7 +2,7 @@ import pickle
 import pandas as pd
 from fastapi import FastAPI
 
-# loading from local so I do not need to keep the mlflow server from GCP running
+# loading from local so no not need to keep the mlflow server from GCP running
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
