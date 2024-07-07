@@ -5,7 +5,6 @@ import pandas as pd
 import mlflow
 
 from prefect import flow, task
-from prefect_gcp import GcpCredentials, GcsBucket
 from prefect.artifacts import create_markdown_artifact
 
 from utils import get_best_params, convert_values_to_int_if_possible, format_confusion_matrix
