@@ -12,21 +12,26 @@ from utils import get_best_params, convert_values_to_int_if_possible, format_con
 
 import os
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 load_dotenv()
 
+
 @task
 def read_data():
-    # TODO: read from postgres
-    gcp_credentials = GcpCredentials.load('my-gcp-creds-block')
-    gcs_bucket = GcsBucket(
-        bucket="fraud_modelling_prefect",
-        gcp_credentials=gcp_credentials
-    )
-    downloaded_file_path = gcs_bucket.download_object_to_path(
-        "ready_df.csv", "ready_df.csv"
-    )
-    return pd.read_csv(downloaded_file_path)
+    db_params = {
+    'host': os.getenv('db_host'),
+    'port': os.getenv('db_port'), 
+    'database': os.getenv('db_name'),
+    'user': os.getenv('db_username'),
+    'password': os.getenv('db_password')
+}
+    engine = create_engine(f'postgresql+psycopg2://{db_params["user"]}:{db_params["password"]}@{db_params["host"]}:{db_params["port"]}/{db_params["database"]}')
+    query = "SELECT * FROM model_data_w_dummy"
+    ready_df = pd.read_sql_query(query, engine)
+    engine.dispose()
+
+    return ready_df
 
 @task
 def split_data(data: pd.DataFrame, test_size: float = 0.2) -> tuple:
