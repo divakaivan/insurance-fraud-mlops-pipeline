@@ -1,2 +1,3 @@
 /monitoring/evidently_repots/data_stability.html linguist-vendored
 /monitoring/evidently_reports/evidently_dashboard.html linguist-vendored
+*.html linguist-vendored
