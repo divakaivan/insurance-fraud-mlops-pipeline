@@ -1,0 +1,7 @@
+[MESSAGES CONTROL]
+
+disable=missing-module-docstring, 
+        line-too-long, 
+        invalid-name, 
+        invalid-sequence-index,
+        no-member,

@@ -12,10 +12,12 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
+    """Welcome message."""
     return {"message": "Welcome to the Insurance Fraud Detection API"}
 
 @app.post("/predict")
 def predict_fraud(data: pd.DataFrame):
+    """Predict fraud for given data"""
     y_pred = model.predict(data)
     data_with_predictions = data.copy()
     data_with_predictions['FraudFound_P'] = y_pred

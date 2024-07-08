@@ -1,5 +1,5 @@
-import mlflow
 import os
+import mlflow
 
 def get_best_params(run_id: str = os.getenv('FRAUD_MODELLING_MLFLOW_RUN_ID')) -> dict:
     """Get best parameters from the MLflow run"""
@@ -24,13 +24,14 @@ def convert_values_to_int_if_possible(dictionary: dict) -> dict:
     return converted_dict
 
 def format_confusion_matrix(cm: list[list[int]]) -> str:
+    """Format confusion matrix as a markdown table"""
     labels = ['Actual Not Fraud', 'Actual Fraud']
     columns = ['Predicted Not Fraud', 'Predicted Fraud']
 
     md_table = "|  | " + " | ".join(columns) + " |\n"
     md_table += "|--------------------|-" + "-|".join(['---']*len(columns)) + "|\n"
 
-    for i in range(len(labels)):
-        md_table += f"| **{labels[i]}** | " + " | ".join([f"{cm[i][j]}" for j in range(len(columns))]) + " |\n"
+    for i, label in enumerate(labels):
+        md_table += f"| **{label}** | " + " | ".join([f"{cm[i][j]}" for j in range(len(columns))]) + " |\n"
 
     return md_table

@@ -28,6 +28,7 @@ def kaggle_to_local() -> str:
 
 @task
 def local_to_gcs(file_path: str) -> None:
+    """Uploads dataset from local to GCS"""
     df = pd.read_csv(file_path + '/fraud_oracle.csv')
     gcp_credentials = GcpCredentials.load("my-gcp-creds-block", validate=False)
     gcs_bucket = GcsBucket(
@@ -36,11 +37,10 @@ def local_to_gcs(file_path: str) -> None:
     )
 
     gcs_bucket.upload_from_dataframe(df=df, to_path='raw_car_insurance_kaggle')
-    
-    return None
 
 @flow(log_prints=True)
 def raw_kaggle_to_gcs():
+    """Orchestration flow to download dataset from Kaggle and save it to GCS"""
     file_path = kaggle_to_local()
     local_to_gcs(file_path)
 

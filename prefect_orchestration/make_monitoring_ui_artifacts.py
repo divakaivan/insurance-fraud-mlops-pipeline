@@ -1,6 +1,6 @@
 import os
-import shap
 import pickle
+import shap
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,10 +11,21 @@ from prefect.flow_runs import pause_flow_run
 from sqlalchemy import create_engine
 from sklearn.model_selection import train_test_split
 
+from evidently.test_suite import TestSuite
+from evidently.test_preset import NoTargetPerformanceTestPreset
+from evidently.test_preset import DataQualityTestPreset
+from evidently.test_preset import DataStabilityTestPreset
+from evidently.test_preset import DataDriftTestPreset
+from evidently.test_preset import BinaryClassificationTestPreset
+
+from evidently.report import Report
+from evidently.metric_preset import DataQualityPreset, DataDriftPreset, ClassificationPreset, TargetDriftPreset
+
+import mlflow
+
 @task
 def load_data_from_db() -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load dataset with meaningful features, and same dataset but turned into dummies (dataset consists of only categorical features)"""
-    
     db_params = {
         'host': os.getenv('db_host'),
         'port': os.getenv('db_port'), 
@@ -35,7 +46,6 @@ def load_model_from_mlflow(model_mlflow_runid: str = None) -> object:
         Load a model to be used
         If a run id is not provided, the env run id will be used
     """
-    import mlflow
     tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment('Insurance Fraud Detection')
@@ -46,29 +56,26 @@ def load_model_from_mlflow(model_mlflow_runid: str = None) -> object:
     logged_model = f'runs:/{run_id}/balanced_rf_model'
 
     model = mlflow.pyfunc.load_model(logged_model)
-    
+
     return model
 
 @task
 def prep_data_for_shap_graphs(model_data_w_dummy: pd.DataFrame) -> pd.DataFrame:
     """Prepare data for the next task in the flow"""
-    
     X = model_data_w_dummy.drop('FraudFound_P', axis=1)
-
     return X
 
 @task
 def make_shap_graphs(model: object, X: pd.DataFrame) -> None:
-    """Make SHAP graphs based on loaded model and data used for model training"""
-    
+    """Make SHAP graphs based on loaded model and data used for model training"""    
     explainer = shap.Explainer(model)
     shap_values = explainer(X)
 
-    shap.plots.waterfall(shap_values[0,:,0], max_display=10, show=False)
+    shap.plots.waterfall(shap_values[0, :, 0], max_display=10, show=False)
     plt.savefig('monitoring/shap_lime_info/not_fraud_shap_values.png')
     plt.close()
 
-    shap.plots.waterfall(shap_values[0,:,1], max_display=10, show=False)
+    shap.plots.waterfall(shap_values[0, :, 1], max_display=10, show=False)
     plt.savefig('monitoring/shap_lime_info/fraud_shap_values.png')
     plt.close()
 
@@ -100,8 +107,6 @@ def make_shap_graphs(model: object, X: pd.DataFrame) -> None:
     plt.savefig('monitoring/shap_lime_info/beeswarm.png')
     plt.close()
 
-    return None
-
 @task
 def prepare_data_for_evidently(model_data_w_dummy: pd.DataFrame, meaningful_features_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """I only have 1 set of data, so I split it to create reference/current data"""
@@ -127,14 +132,6 @@ def prepare_data_for_evidently(model_data_w_dummy: pd.DataFrame, meaningful_feat
 def make_evidently_html_dashboards(meaningful_reference_data: pd.DataFrame, meaningful_current_data: pd.DataFrame) -> None:
     """Create HTML evidently dashboards"""
 
-    # Data tests dashboard
-    from evidently.test_suite import TestSuite
-    from evidently.test_preset import NoTargetPerformanceTestPreset
-    from evidently.test_preset import DataQualityTestPreset
-    from evidently.test_preset import DataStabilityTestPreset
-    from evidently.test_preset import DataDriftTestPreset
-    from evidently.test_preset import BinaryClassificationTestPreset
-
     data_stability = TestSuite(tests=[
         DataStabilityTestPreset(),
         NoTargetPerformanceTestPreset(),
@@ -146,10 +143,6 @@ def make_evidently_html_dashboards(meaningful_reference_data: pd.DataFrame, mean
     data_stability.run(reference_data=meaningful_reference_data, current_data=meaningful_current_data)
 
     data_stability.save_html('monitoring/evidently_reports/data_stability.html')
-
-    # Model prediction data dashboard
-    from evidently.report import Report
-    from evidently.metric_preset import DataQualityPreset, DataDriftPreset, ClassificationPreset, TargetDriftPreset
 
     report = Report(metrics=[
         DataQualityPreset(),

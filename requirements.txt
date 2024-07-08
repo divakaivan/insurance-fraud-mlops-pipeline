@@ -17,3 +17,5 @@ scipy==1.11.1
 google-cloud
 google-cloud-storage
 gcsfs
+sphinx
+pytest
