@@ -70,7 +70,7 @@ prefect-serve-cloud and start-all are not run in detached mode
 ### Things to consider for improvements
 
 - adding more tests
-- simulating a new dataset and use it on the batch flow
+- simulating a new dataset and using it on the batch predict flow
 - more complex monitoring dashboards using Grafana and Evidently
 
 ### Blog posts about this project
