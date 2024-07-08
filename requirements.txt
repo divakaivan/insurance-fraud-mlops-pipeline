@@ -19,3 +19,4 @@ google-cloud-storage
 gcsfs
 sphinx
 pytest
+pre-commit
