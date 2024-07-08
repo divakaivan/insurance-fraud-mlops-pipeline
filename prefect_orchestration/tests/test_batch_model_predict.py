@@ -1,11 +1,12 @@
-import pytest
 from unittest.mock import patch, MagicMock
+import pytest
 import pandas as pd
 from sqlalchemy.engine.base import Engine
 from batch_model_predict import read_new_data, predict, save_predictions, batch_model_predict
 
 @pytest.fixture(autouse=True)
 def mock_env_vars(monkeypatch):
+    """Mock environment variables for testing"""
     monkeypatch.setenv('db_host', 'localhost')
     monkeypatch.setenv('db_port', '5432')
     monkeypatch.setenv('db_name', 'test_db')
@@ -14,6 +15,7 @@ def mock_env_vars(monkeypatch):
 
 @pytest.fixture
 def mock_engine():
+    """Mock the SQLAlchemy engine object"""
     with patch('batch_model_predict.create_engine') as mock_create_engine:
         mock_engine = MagicMock(spec=Engine)
         mock_create_engine.return_value = mock_engine
@@ -21,12 +23,14 @@ def mock_engine():
 
 @pytest.fixture
 def mock_read_sql():
+    """Mock the pd.read_sql_query function"""
     with patch('batch_model_predict.pd.read_sql_query') as mock_read_sql_query:
         mock_df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         mock_read_sql_query.return_value = mock_df
         yield mock_read_sql_query
 
 def test_read_new_data(mock_read_sql, mock_engine):
+    """Test the read_new_data task"""
     table_name = 'test_table'
     result = read_new_data.fn(table_name)
     assert not result.empty
@@ -35,12 +39,14 @@ def test_read_new_data(mock_read_sql, mock_engine):
 
 @pytest.fixture
 def mock_model():
+    """Mock the model object"""
     model = MagicMock()
     model.predict.return_value = [0, 1]
     model.predict_proba.return_value = [[0.1, 0.9], [0.8, 0.2]]
     return model
 
 def test_predict(mock_model):
+    """Test the predict task"""
     data = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
     result = predict.fn(mock_model, data, get_probs=True)
     assert 'FraudFound_P' in result.columns
@@ -48,10 +54,12 @@ def test_predict(mock_model):
 
 @pytest.fixture
 def mock_to_sql():
+    """Mock the pd.DataFrame.to_sql task"""
     with patch('batch_model_predict.pd.DataFrame.to_sql') as mock_to_sql:
         yield mock_to_sql
 
 def test_save_predictions(mock_to_sql, mock_engine):
+    """Test the save_predictions task"""
     data = pd.DataFrame({'feature1': [1, 2], 'FraudFound_P': [0, 1]})
     table_name = 'test_predictions'
     save_predictions.fn(data, table_name)
@@ -59,17 +67,18 @@ def test_save_predictions(mock_to_sql, mock_engine):
     mock_engine.dispose.assert_called_once()
 
 def test_batch_model_predict(mock_model):
+    """Test the batch_model_predict flow"""
     with patch('batch_model_predict.read_new_data') as mock_read_new_data, \
          patch('batch_model_predict.load_model_from_mlflow') as mock_load_model, \
          patch('batch_model_predict.predict') as mock_predict, \
          patch('batch_model_predict.save_predictions') as mock_save_predictions, \
          patch('batch_model_predict.pause_flow_run') as mock_pause_flow_run:
-        
+
         mock_pause_flow_run.return_value = 'test_table'
         mock_read_new_data.return_value = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         mock_load_model.return_value = mock_model
         mock_predict.return_value = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4], 'FraudFound_P': [0, 1]})
-        
+
         batch_model_predict()
 
         mock_pause_flow_run.assert_called_once()
