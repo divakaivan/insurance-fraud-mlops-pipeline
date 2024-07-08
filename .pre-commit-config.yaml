@@ -18,7 +18,7 @@ repos:
         args: [
             "-rn", # only display messages
             "-sn", # don't display score
-            "--recursive=y prefect_orchestration",
+            "prefect_orchestration",
         ]
 -   repo: local
     hooks:
