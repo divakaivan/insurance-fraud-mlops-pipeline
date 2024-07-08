@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 def full_dashaboard():
+    """This function displays the full dashboard with the model and data dashboard"""
     st.title('Car Insurance Fraud Model and Data dashboard')
     path_to_html = "monitoring/evidently_reports/evidently_dashboard.html" 
 
@@ -10,6 +11,7 @@ def full_dashaboard():
     components.html(html_data, height=5000, width=1000, scrolling=True)
 
 def data_test_report():
+    """This function displays the data tests dashboard"""
     st.title('Data tests dashboard')
     path_to_html = "monitoring/evidently_reports/data_stability.html" 
 
@@ -18,6 +20,7 @@ def data_test_report():
     components.html(html_data, height=5000, width=1000, scrolling=True)
 
 def shap_values():
+    """This function displays the SHAP values dashboard"""
     st.image('monitoring/shap_lime_info/all_shap_values.png')
     st.image('monitoring/shap_lime_info/beeswarm.png')
     st.image('monitoring/shap_lime_info/fraud_shap_values.png')
