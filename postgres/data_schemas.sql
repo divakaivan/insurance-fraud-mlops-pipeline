@@ -12,7 +12,7 @@ CREATE TABLE meaningful_features (
     "VehicleCategory" VARCHAR(255),
     "Fault" VARCHAR(255),
     "FraudFound_P" INT,
-    "FraudFound_P_Prob" INT DEFAULT 2
+    "FraudFound_P_Prob" REAL DEFAULT 2.00
 );
 
 CREATE TABLE model_data_w_dummy (
@@ -81,5 +81,5 @@ CREATE TABLE model_data_w_dummy (
     "VehicleCategory_Utility" INT,
     "Fault_Third_Party" INT,
     "FraudFound_P" INT,
-    "FraudFound_P_Prob" INT DEFAULT 2
+    "FraudFound_P_Prob" REAL DEFAULT 2.00
 );
