@@ -84,4 +84,4 @@ I developed the current version (as of 8th of July 2024) project in the span of 
 - [Day 186](https://50daysml.blogspot.com/2024/07/day-186-prefect-cloud-model-serving.html): Prefect cloud, model serving with FastAPI, and SHAP values
 - [Day 187](https://50daysml.blogspot.com/2024/07/day-187-setting-up-postgres-pgadmin.html): Setting up postgres, pgAdmin, Grafana and FastAPI to run in Docker
 - [Day 188](https://50daysml.blogspot.com/2024/07/day-188-setting-up-automatically.html): Setting up automatically updated monitoring UI using streamlit
-- [Day 189](): 
+- [Day 189](https://50daysml.blogspot.com/2024/07/day-189-i-finished-car-insurance-fraud.html): I finished the Car Insurance Fraud MLOps project. Thank you MLOps zoomcamp for teaching me so much!
