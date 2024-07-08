@@ -17,6 +17,14 @@ help:  ## Show this help message
 	@echo "prefect-serve-cloud and start-all are not run in detached mode"
 	@echo ""
 
+.PHONY: gcp-view
+gcp-setup:  ## View GCP resources to be created (buckets for mlflow artifacts, raw data, and start a VM that runs mlflow on start)
+	cd terraform && terraform init && terraform plan
+
+.PHONY: gcp-create
+gcp-create:  ## Create GCP resources 
+	cd terraform && terraform apply
+
 .PHONY: prefect-serve-cloud
 prefect-serve-cloud:  ## Serve Model Train and Load to GCS flows to Prefect Cloud
 	python prefect_orchestration/serve_flows.py
@@ -29,7 +37,7 @@ build-all:  ## Build image with PostgreSQL, pgAdmin, Grafana, Data upload to db,
 start-all:  ## Start services
 	docker-compose -f $(DOCKER_COMPOSE_FILE) up
 
-.PHONY: update-monitoring-artifacts
-update-monitoring-artifacts:  ## Update monitoring artifacts 
+.PHONY: monitoring
+monitoring:  ## Update monitoring artifacts 
 	python prefect_orchestration/make_monitoring_ui_artifacts.py
 
