@@ -1,20 +1,20 @@
+import os
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report, confusion_matrix, recall_score
 from sklearn.model_selection import train_test_split
 from imblearn.ensemble import BalancedRandomForestClassifier
 import pandas as pd
-import mlflow
 
 from prefect import flow, task
 from prefect.artifacts import create_markdown_artifact
 
 from utils import get_best_params, convert_values_to_int_if_possible, format_confusion_matrix
 
-import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-load_dotenv()
+import mlflow
 
+load_dotenv()
 
 @task
 def read_data() -> pd.DataFrame:
@@ -37,11 +37,11 @@ def read_data() -> pd.DataFrame:
 @task
 def split_data(data: pd.DataFrame, test_size: float = 0.2) -> tuple:
     """Split dataset into training and testing sets"""
-        
+
     dummies_X = data.drop(columns=['FraudFound_P'])
     y = data['FraudFound_P']
     X_train, X_test, y_train, y_test = train_test_split(dummies_X, y, test_size=test_size, random_state=42)
-    
+
     return X_train, X_test, y_train, y_test
 
 @task
@@ -66,11 +66,11 @@ def train_model(X_train: pd.DataFrame, y_train: pd.Series, X_test, y_test) -> No
         mlflow.sklearn.log_model(model, model_name)
 
         y_pred = model.predict(X_test)
-        
+
         mlflow.log_metric('recall', recall_score(y_test, y_pred))
         cr = classification_report(y_test, y_pred, output_dict=True, target_names=['Not Fraud', 'Fraud'])
         mlflow.log_dict(cr, './classification_report.json')
-        md_classification_report = f"""
+        md_classification_report = """
 | Class | Precision | Recall | F1-Score | Support |
 |-------|-----------|--------|----------|---------|
 """
@@ -105,7 +105,7 @@ def train_model(X_train: pd.DataFrame, y_train: pd.Series, X_test, y_test) -> No
             key="mlflowinfo",
             markdown=mlflow_model_info
         )
-        
+
         deploy_model_instructions = f"""
 ## Deploy Model Instructions
 
@@ -124,7 +124,7 @@ logged_model = 'runs:/{run.info.run_id}/{model_name}'
 model = mlflow.pyfunc.load_model(logged_model)
 ```
 """
-        
+
         create_markdown_artifact(
             key="deployinstructions",
             markdown=deploy_model_instructions
@@ -134,6 +134,7 @@ model = mlflow.pyfunc.load_model(logged_model)
 
 @flow(log_prints=True)
 def insurance_fraud_model() -> None:
+    """Orchestration flow to train the insurance fraud model and log the metrics and model to MLflow"""
 
     # MLflow settings
     tracking_uri = os.getenv('FRAUD_MODELLING_MLFLOW_TRACKING_URI')
@@ -142,13 +143,11 @@ def insurance_fraud_model() -> None:
 
     # Load
     data = read_data()
-    
     # Split
-    X_train, X_test, y_train, y_test = split_data(data)
-    
+    X_train, X_test, y_train, y_test = split_data(data)   
     # Train
     train_model(X_train, y_train, X_test, y_test)
-    
+
 if __name__ == "__main__":
     insurance_fraud_model.serve(
         name='Train Insurance Fraud Model',
