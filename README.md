@@ -69,7 +69,7 @@ prefect-serve-cloud and start-all are not run in detached mode
 
 ### Things to consider for improvements
 
-- try more model ensambles and sampling algorithms (i.e. [ADASYN](https://ieeexplore.ieee.org/document/4633969)
+- try more model ensambles and sampling algorithms (i.e. [ADASYN](https://ieeexplore.ieee.org/document/4633969))
 - adding more tests
 - simulating a new dataset and using it on the batch predict flow
 - more complex monitoring dashboards using Grafana and Evidently
