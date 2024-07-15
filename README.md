@@ -1,3 +1,9 @@
+# Machine Learning Canvas
+
+![image](https://github.com/user-attachments/assets/b6b1dc7c-d518-4ee8-b304-df7db538b12b)
+
+Template from [ownml.co](https://www.ownml.co/)
+
 # Project diagram
 
 ![Project diagram](/project_info/project_diagram.png)
