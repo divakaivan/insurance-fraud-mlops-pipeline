@@ -14,6 +14,7 @@ Template from [ownml.co](https://www.ownml.co/)
 - **PostgreSQL** (and **pgAdmin**) is used as a data mart to store processed data, and data ready for model training
 - **Prefect** and **Prefect Cloud** is used for orchestration. Flows used:
   - upload raw Kaggle data to GCS
+  - preprocess data and provide a simple check that meaningful features are consistent
   - train a new model
   - do batch model prediction
   - update Evidently monitoring artifacts (HTMLs + PNGs)
