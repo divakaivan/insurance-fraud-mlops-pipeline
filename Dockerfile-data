@@ -6,5 +6,3 @@ RUN pip install google-auth google-cloud-storage pandas sqlalchemy psycopg2-bina
 
 COPY monitoring .
 COPY my-creds.json .
-
-CMD python monitorng/upload_to_postgres.py
